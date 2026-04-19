@@ -1,0 +1,41 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# Generated files
+*.g.dart
+*.freezed.dart
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs and local environment
+*.log
+.env
+.env.*
+.envrc
+.secrets/
+*.secret
+!.env.example
+
+# Firebase local CLI/cache files
+.firebase/
+
+# Firebase native config (keep template/sample only)
+google-services.json
+GoogleService-Info.plist
+
+# Signing keys / credentials
+*.jks
+*.keystore
+*.p12
+*.pem
+key.properties
