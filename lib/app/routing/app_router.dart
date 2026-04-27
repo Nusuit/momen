@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:momen/app/routing/app_route.dart';
@@ -16,11 +17,18 @@ import 'package:momen/features/auth/presentation/state/auth_controller.dart';
 import 'package:momen/features/feed/presentation/pages/detail_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authControllerProvider);
+  final authStateNotifier = ValueNotifier<AuthStatus>(AuthStatus.unknown);
+  ref.onDispose(authStateNotifier.dispose);
+
+  ref.listen(authControllerProvider, (_, state) {
+    authStateNotifier.value = state.status;
+  });
 
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: authStateNotifier,
     redirect: (context, state) {
+      final authState = ref.read(authControllerProvider);
       final location = state.matchedLocation;
       const guestPaths = {
         '/',

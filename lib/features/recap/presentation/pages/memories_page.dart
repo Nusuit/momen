@@ -128,36 +128,125 @@ class _MemoriesPageState extends ConsumerState<MemoriesPage> {
                 }
 
                 if (viewMode == MemoriesViewMode.grid) {
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(AppSizes.p12),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: AppSizes.p8,
-                      mainAxisSpacing: AppSizes.p8,
-                      childAspectRatio: 0.74,
-                    ),
-                    itemCount: memories.length,
-                    itemBuilder: (context, index) {
-                      final memory = memories[index];
-                      return InkWell(
-                        borderRadius: BorderRadius.circular(AppSizes.r16),
-                        onTap: () {
-                          ref
-                              .read(focusedMemoryIndexProvider.notifier)
-                              .setIndex(index);
-                          ref
-                              .read(memoriesViewModeProvider.notifier)
-                              .showStory();
-                        },
+                  String fmtVnd(int v) {
+                    final s = v.toString();
+                    final buf = StringBuffer();
+                    for (var i = 0; i < s.length; i++) {
+                      final ri = s.length - i;
+                      buf.write(s[i]);
+                      if (ri > 1 && ri % 3 == 1) buf.write('.');
+                    }
+                    return buf.toString();
+                  }
+
+                  Widget gridCard(MemoryPost memory, int globalIndex, double height) {
+                    final hasAmount = (memory.amountVnd ?? 0) > 0;
+                    final caption = memory.caption.trim();
+                    final showOverlay = hasAmount || caption.isNotEmpty;
+                    final overlayText = hasAmount
+                        ? '${fmtVnd(memory.amountVnd!)}vnd'
+                        : caption.length > 28
+                            ? '${caption.substring(0, 28)}...'
+                            : '$caption...';
+
+                    return GestureDetector(
+                      onTap: () {
+                        ref.read(focusedMemoryIndexProvider.notifier).setIndex(globalIndex);
+                        ref.read(memoriesViewModeProvider.notifier).showStory();
+                      },
+                      child: Container(
+                        height: height,
+                        margin: const EdgeInsets.only(bottom: AppSizes.p8),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(AppSizes.r16),
-                          child: CachedPostImage(imageUrl: memory.imageUrl),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CachedPostImage(imageUrl: memory.imageUrl),
+                              if (showOverlay)
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.fromLTRB(10, 28, 10, 10),
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Color(0x00000000),
+                                          Color(0xCC000000),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Text(
+                                      overlayText,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 0.1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  }
+
+                  final leftItems = [
+                    for (int i = 0; i < memories.length; i += 2)
+                      (memory: memories[i], globalIndex: i),
+                  ];
+                  final rightItems = [
+                    for (int i = 1; i < memories.length; i += 2)
+                      (memory: memories[i], globalIndex: i),
+                  ];
+
+                  // Alternating heights for film-strip feel
+                  const heights = [195.0, 155.0];
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSizes.p12, AppSizes.p4, AppSizes.p12, AppSizes.p24),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left column
+                        Expanded(
+                          child: Column(
+                            children: [
+                              for (int i = 0; i < leftItems.length; i++)
+                                gridCard(leftItems[i].memory,
+                                    leftItems[i].globalIndex,
+                                    heights[i % heights.length]),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.p8),
+                        // Right column – staggered offset
+                        Expanded(
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 36),
+                              for (int i = 0; i < rightItems.length; i++)
+                                gridCard(rightItems[i].memory,
+                                    rightItems[i].globalIndex,
+                                    heights[(i + 1) % heights.length]),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 }
+
 
                 return _MemoryStoryView(
                   memories: memories,
@@ -331,180 +420,174 @@ class _MemoryStoryViewState extends ConsumerState<_MemoryStoryView> {
               AppSizes.p12, AppSizes.p8, AppSizes.p12, AppSizes.p12),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppSizes.r24),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CachedPostImage(imageUrl: memory.imageUrl),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSizes.p16,
-                      AppSizes.p12,
-                      AppSizes.p16,
-                      AppSizes.p32,
-                    ),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0xB3000000), Color(0x00000000)],
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        memory.isRevealed && memory.ownerName != null
-                            ? memory.ownerName!
-                            : alias,
-                        key: const Key('memories_story_alias_top_center'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          shadows: [
-                            Shadow(color: Colors.black54, blurRadius: 8),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: AppSizes.p8,
-                  left: AppSizes.p12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.p8,
-                      vertical: AppSizes.p4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black45,
-                      borderRadius: BorderRadius.circular(AppSizes.r12),
-                    ),
-                    child: Text(
-                      _timeAgo(memory.createdAt),
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: AppSizes.p8,
-                  right: AppSizes.p8,
-                  child: PopupMenuButton<_PostMenuAction>(
-                    key: const Key('memories_story_post_menu_button'),
-                    enabled: !isPostBusy,
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                    color: Theme.of(context).colorScheme.surface,
-                    onSelected: (action) => _handlePostMenuAction(
-                      context: context,
-                      memory: memory,
-                      isOwn: isOwn,
-                      action: action,
-                    ),
-                    itemBuilder: (_) => [
-                      if (isOwn)
-                        const PopupMenuItem(
-                          value: _PostMenuAction.editCaption,
-                          child: Text('Edit caption'),
-                        ),
-                      if (isOwn)
-                        const PopupMenuItem(
-                          value: _PostMenuAction.delete,
-                          child: Text('Delete post'),
-                        ),
-                      if (!isOwn)
-                        const PopupMenuItem(
-                          value: _PostMenuAction.report,
-                          child: Text('Report post'),
-                        ),
-                      if (!isOwn)
-                        const PopupMenuItem(
-                          value: _PostMenuAction.unfriend,
-                          child: Text('Unfriend'),
-                        ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSizes.p16,
-                      AppSizes.p32,
-                      AppSizes.p16,
-                      AppSizes.p16,
-                    ),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x00000000), Color(0xB3000000)],
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+            child: Container(
+              color: const Color(0xFF111111),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── Image ─────────────────────────────────────────────
+                  Expanded(
+                    flex: 62,
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        if (trimmedCaption.isNotEmpty) ...[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSizes.p24,
-                            ),
-                            child: Text(
-                              trimmedCaption,
-                              key: const Key('memories_story_caption_center'),
-                              textAlign: TextAlign.center,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                                height: 1.18,
-                                shadows: [
-                                  Shadow(color: Colors.black87, blurRadius: 10),
-                                ],
+                        CachedPostImage(imageUrl: memory.imageUrl),
+                        // Top gradient: alias + menu
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(
+                                AppSizes.p16, AppSizes.p12, AppSizes.p4, AppSizes.p32),
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Color(0xB3000000), Color(0x00000000)],
                               ),
                             ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    memory.isRevealed && memory.ownerName != null
+                                        ? memory.ownerName!
+                                        : alias,
+                                    key: const Key('memories_story_alias_top_center'),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      shadows: [
+                                        Shadow(color: Colors.black54, blurRadius: 8),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuButton<_PostMenuAction>(
+                                  key: const Key('memories_story_post_menu_button'),
+                                  enabled: !isPostBusy,
+                                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                                  color: Theme.of(context).colorScheme.surface,
+                                  onSelected: (action) => _handlePostMenuAction(
+                                    context: context,
+                                    memory: memory,
+                                    isOwn: isOwn,
+                                    action: action,
+                                  ),
+                                  itemBuilder: (_) => [
+                                    if (isOwn)
+                                      const PopupMenuItem(
+                                        value: _PostMenuAction.editCaption,
+                                        child: Text('Edit caption'),
+                                      ),
+                                    if (isOwn)
+                                      const PopupMenuItem(
+                                        value: _PostMenuAction.delete,
+                                        child: Text('Delete post'),
+                                      ),
+                                    if (!isOwn)
+                                      const PopupMenuItem(
+                                        value: _PostMenuAction.report,
+                                        child: Text('Report post'),
+                                      ),
+                                    if (!isOwn)
+                                      const PopupMenuItem(
+                                        value: _PostMenuAction.unfriend,
+                                        child: Text('Unfriend'),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: AppSizes.p12),
-                        ],
-                        _ReactionBar(
-                          memory: memory,
-                          isBusy: postActions.contains('reaction:${memory.id}'),
-                          onReact: (reactionType) async {
-                            try {
-                              await ref
-                                  .read(postActionControllerProvider.notifier)
-                                  .setReaction(
-                                    postId: memory.id,
-                                    reactionType: reactionType,
-                                  );
-                            } catch (e) {
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
-                              );
-                            }
-                          },
                         ),
-                        const SizedBox(height: AppSizes.p8),
+                      ],
+                    ),
+                  ),
+
+                  // ── Info panel ────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSizes.p16, AppSizes.p12, AppSizes.p16, AppSizes.p16),
+                    color: const Color(0xFF111111),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Time
+                        Text(
+                          _timeAgo(memory.createdAt),
+                          style: const TextStyle(
+                            color: Colors.white38,
+                            fontSize: 11,
+                            letterSpacing: 1.4,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        // Amount — only if present and > 0
+                        if (memory.amountVnd != null && memory.amountVnd! > 0) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatAmount(memory.amountVnd!),
+                            style: const TextStyle(
+                              color: Color(0xFFE8A234),
+                              fontSize: 34,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                            ),
+                          ),
+                        ],
+                        // Caption
+                        if (trimmedCaption.isNotEmpty) ...[
+                          const SizedBox(height: AppSizes.p8),
+                          Text(
+                            trimmedCaption,
+                            key: const Key('memories_story_caption_center'),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: AppSizes.p12),
+                        // Reactions + reveal
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            Expanded(
+                              child: _ReactionBar(
+                                memory: memory,
+                                isBusy: postActions.contains('reaction:${memory.id}'),
+                                onReact: (reactionType) async {
+                                  try {
+                                    await ref
+                                        .read(postActionControllerProvider.notifier)
+                                        .setReaction(
+                                          postId: memory.id,
+                                          reactionType: reactionType,
+                                        );
+                                  } catch (e) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
                             if (canReveal)
                               FilledButton.icon(
                                 onPressed: isRevealing
                                     ? null
                                     : () => ref
-                                        .read(revealPostControllerProvider
-                                            .notifier)
+                                        .read(revealPostControllerProvider.notifier)
                                         .reveal(memory.id),
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: Colors.white24,
+                                  backgroundColor: Colors.white12,
                                   foregroundColor: Colors.white,
                                   visualDensity: VisualDensity.compact,
                                 ),
@@ -518,17 +601,16 @@ class _MemoryStoryViewState extends ConsumerState<_MemoryStoryView> {
                                         ),
                                       )
                                     : const Icon(Icons.visibility, size: 14),
-                                label: Text(isRevealing
-                                    ? 'Revealing...'
-                                    : 'Reveal identity'),
+                                label: Text(
+                                    isRevealing ? 'Revealing...' : 'Reveal'),
                               ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -538,10 +620,28 @@ class _MemoryStoryViewState extends ConsumerState<_MemoryStoryView> {
 
   String _timeAgo(DateTime dateTime) {
     final diff = DateTime.now().difference(dateTime);
-    if (diff.inMinutes < 1) return 'now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m';
-    if (diff.inDays < 1) return '${diff.inHours}h';
-    return '${diff.inDays}d';
+    if (diff.inMinutes < 1) return 'JUST NOW';
+    if (diff.inHours < 1) {
+      final m = diff.inMinutes;
+      return '$m ${m == 1 ? 'MINUTE' : 'MINUTES'} AGO';
+    }
+    if (diff.inDays < 1) {
+      final h = diff.inHours;
+      return '$h ${h == 1 ? 'HOUR' : 'HOURS'} AGO';
+    }
+    final d = diff.inDays;
+    return '$d ${d == 1 ? 'DAY' : 'DAYS'} AGO';
+  }
+
+  String _formatAmount(int vnd) {
+    final s = vnd.toString();
+    final buf = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      final reverseIndex = s.length - i;
+      buf.write(s[i]);
+      if (reverseIndex > 1 && reverseIndex % 3 == 1) buf.write('.');
+    }
+    return buf.toString();
   }
 
   Future<void> _handlePostMenuAction({

@@ -53,8 +53,6 @@ class AuthRemoteDataSource {
       throw Exception('Sign up failed: missing user.');
     }
 
-    await client.from('profiles').upsert({'id': user.id});
-
     return user;
   }
 
@@ -73,8 +71,6 @@ class AuthRemoteDataSource {
     if (user == null) {
       throw Exception('Sign up failed: missing user.');
     }
-
-    await client.from('profiles').upsert({'id': user.id});
 
     return user;
   }

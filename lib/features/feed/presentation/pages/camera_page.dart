@@ -37,6 +37,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   final TextEditingController _amountController = TextEditingController();
   bool _isFormattingAmount = false;
   final ImagePicker _imagePicker = ImagePicker();
+  double _currentZoom = 1.0;
 
   @override
   void initState() {
@@ -96,6 +97,18 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   }
 
   void _retakePhoto() => setState(() => _capturedPhoto = null);
+
+  Future<void> _setZoom(double zoom) async {
+    final controller = ref.read(cameraControllerProvider).controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    try {
+      final minZoom = await controller.getMinZoomLevel();
+      final maxZoom = await controller.getMaxZoomLevel();
+      final targetZoom = zoom.clamp(minZoom, maxZoom);
+      await controller.setZoomLevel(targetZoom);
+      if (mounted) setState(() => _currentZoom = zoom);
+    } catch (_) {}
+  }
 
   void _syncAmountFromCaption() {
     if (_isFormattingAmount || _amountController.text.trim().isNotEmpty) return;
@@ -238,34 +251,49 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                             File(_capturedPhoto!.path),
                             fit: BoxFit.cover,
                           ),
-                        Positioned(
-                          top: AppSizes.p12,
-                          left: AppSizes.p12,
-                          child: Material(
-                            color: Colors.black54,
-                            shape: const CircleBorder(),
-                            child: IconButton(
-                              key: const Key('camera_close_button'),
-                              onPressed: _handleBack,
-                              icon: const Icon(Icons.close),
-                              color: Colors.white,
-                            ),
+                        // Top UI and Focus
+                        if (!hasCapturedPhoto) ...[
+                          Positioned(
+                            top: AppSizes.p16,
+                            right: AppSizes.p16,
+                            child: const Icon(Icons.grid_on, color: Colors.white70),
                           ),
-                        ),
-                        if (!hasCapturedPhoto)
+                          Positioned(
+                            bottom: AppSizes.p16,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _setZoom(0.5),
+                                  child: Text('0.5X', style: TextStyle(color: _currentZoom == 0.5 ? colorScheme.primary : Colors.white54, fontSize: _currentZoom == 0.5 ? 14 : 12, fontWeight: _currentZoom == 0.5 ? FontWeight.bold : FontWeight.normal)),
+                                ),
+                                const SizedBox(width: 24),
+                                GestureDetector(
+                                  onTap: () => _setZoom(1.0),
+                                  child: Text('1X', style: TextStyle(color: _currentZoom == 1.0 ? colorScheme.primary : Colors.white54, fontSize: _currentZoom == 1.0 ? 14 : 12, fontWeight: _currentZoom == 1.0 ? FontWeight.bold : FontWeight.normal)),
+                                ),
+                                const SizedBox(width: 24),
+                                GestureDetector(
+                                  onTap: () => _setZoom(2.0),
+                                  child: Text('2X', style: TextStyle(color: _currentZoom == 2.0 ? colorScheme.primary : Colors.white54, fontSize: _currentZoom == 2.0 ? 14 : 12, fontWeight: _currentZoom == 2.0 ? FontWeight.bold : FontWeight.normal)),
+                                ),
+                              ],
+                            )
+                          ),
+                        ],
+                        if (hasCapturedPhoto)
                           Positioned(
                             top: AppSizes.p12,
-                            right: AppSizes.p12,
+                            left: AppSizes.p12,
                             child: Material(
                               color: Colors.black54,
                               shape: const CircleBorder(),
                               child: IconButton(
-                                key: const Key('camera_switch_button'),
-                                onPressed: cameraState.hasMultipleCameras &&
-                                        !cameraState.isInitializing
-                                    ? _switchCamera
-                                    : null,
-                                icon: const Icon(Icons.flip_camera_ios),
+                                key: const Key('camera_close_button'),
+                                onPressed: _handleBack,
+                                icon: const Icon(Icons.close),
                                 color: Colors.white,
                               ),
                             ),
@@ -308,38 +336,87 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: AppSizes.p16),
-              if (!hasCapturedPhoto)
+              const SizedBox(height: AppSizes.p24),
+              if (!hasCapturedPhoto) ...[
+                GestureDetector(
+                  onTap: () => widget.onSwipeToMemories?.call(),
+                  child: Column(
+                    children: [
+                      Icon(Icons.calendar_today_outlined, color: colorScheme.primary, size: 20),
+                      const SizedBox(height: 4),
+                      Text('DATE MEMORY', style: TextStyle(color: colorScheme.primary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    IconButton(
+                    GestureDetector(
                       key: const Key('camera_gallery_button'),
-                      onPressed: _pickFromGallery,
-                      icon: const Icon(Icons.photo_library),
+                      onTap: _pickFromGallery,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 50, height: 50,
+                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
+                            child: Icon(Icons.photo_library_outlined, color: colorScheme.primary, size: 20),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('VAULT', style: TextStyle(color: colorScheme.primary, fontSize: 9, letterSpacing: 1.0)),
+                        ],
+                      )
                     ),
-                    FilledButton(
+                    GestureDetector(
                       key: const Key('camera_capture_button'),
-                      onPressed: cameraState.isReady ? _capturePhoto : null,
-                      style: FilledButton.styleFrom(
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(AppSizes.p24),
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                      ),
-                      child: const Icon(Icons.circle),
+                      onTap: cameraState.isReady ? _capturePhoto : null,
+                      child: Container(
+                        width: 80, height: 80,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colorScheme.primary.withOpacity(0.3), width: 2),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colorScheme.primary,
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 8, height: 8,
+                              decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black45),
+                            )
+                          ),
+                        ),
+                      )
                     ),
-                    const SizedBox(width: AppSizes.i32),
+                    GestureDetector(
+                      key: const Key('camera_switch_button'),
+                      onTap: cameraState.hasMultipleCameras && !cameraState.isInitializing ? _switchCamera : null,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 50, height: 50,
+                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
+                            child: Icon(Icons.flip_camera_ios_outlined, color: colorScheme.primary, size: 20),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('FLIP', style: TextStyle(color: colorScheme.primary, fontSize: 9, letterSpacing: 1.0)),
+                        ],
+                      )
+                    ),
                   ],
-                )
-              else
+                ),
+                const SizedBox(height: 16),
+              ] else
                 _CapturedPreviewActions(
                   showAmountInput: widget.showAmountInput,
                   amountController: _amountController,
                   onAmountChanged: _onAmountChanged,
                   onRetake: _retakePhoto,
                   onSubmit: _submitPost,
-                  isSubmitting: false,
+                  isSubmitting: isSubmitting,
                   submitProgress: postState.progress,
                   submitMessage: postState.message,
                 ),
