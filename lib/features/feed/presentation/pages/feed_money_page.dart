@@ -33,8 +33,8 @@ class _FeedMoneyPageState extends State<FeedMoneyPage> {
                   segments: const [
                     ButtonSegment<_FeedMoneyTab>(
                       value: _FeedMoneyTab.feed,
-                      icon: Icon(Icons.dynamic_feed),
-                      label: Text('Feed'),
+                      icon: Icon(Icons.calendar_month),
+                      label: Text('Calendar'),
                     ),
                     ButtonSegment<_FeedMoneyTab>(
                       value: _FeedMoneyTab.money,

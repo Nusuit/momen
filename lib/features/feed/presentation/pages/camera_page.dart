@@ -38,6 +38,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   bool _isFormattingAmount = false;
   final ImagePicker _imagePicker = ImagePicker();
   double _currentZoom = 1.0;
+  bool _showGrid = false;
 
   @override
   void initState() {
@@ -251,12 +252,26 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                             File(_capturedPhoto!.path),
                             fit: BoxFit.cover,
                           ),
+                        if (!hasCapturedPhoto && _showGrid)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                painter: _GridPainter(),
+                              ),
+                            ),
+                          ),
                         // Top UI and Focus
                         if (!hasCapturedPhoto) ...[
                           Positioned(
-                            top: AppSizes.p16,
-                            right: AppSizes.p16,
-                            child: const Icon(Icons.grid_on, color: Colors.white70),
+                            top: AppSizes.p8,
+                            right: AppSizes.p8,
+                            child: IconButton(
+                              onPressed: () => setState(() => _showGrid = !_showGrid),
+                              icon: Icon(
+                                _showGrid ? Icons.grid_on : Icons.grid_off,
+                                color: _showGrid ? colorScheme.primary : Colors.white70,
+                              ),
+                            ),
                           ),
                           Positioned(
                             bottom: AppSizes.p16,
@@ -552,4 +567,27 @@ class _CapturedPreviewActions extends StatelessWidget {
       ),
     );
   }
+}
+
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.35)
+      ..strokeWidth = 1.0;
+
+    final dx = size.width / 3;
+    final dy = size.height / 3;
+
+    // Vertical lines
+    canvas.drawLine(Offset(dx, 0), Offset(dx, size.height), paint);
+    canvas.drawLine(Offset(dx * 2, 0), Offset(dx * 2, size.height), paint);
+
+    // Horizontal lines
+    canvas.drawLine(Offset(0, dy), Offset(size.width, dy), paint);
+    canvas.drawLine(Offset(0, dy * 2), Offset(size.width, dy * 2), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
