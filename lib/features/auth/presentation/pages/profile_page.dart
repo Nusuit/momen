@@ -107,6 +107,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   String? _contactsError;
   bool _isLoadingProfile = true;
   bool _isSavingProfile = false;
+  bool _isSigningOut = false;
   String? _profileError;
   _ProfileDetails? _profileDetails;
 
@@ -478,6 +479,44 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         _contactsError = 'Could not read contacts: $e';
         _isLoadingContacts = false;
       });
+    }
+  }
+
+  Future<void> _handleSignOut() async {
+    if (_isSigningOut) return;
+
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Sign out'),
+          content: const Text('Do you want to sign out from this device?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Sign out'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSignOut != true || !mounted) return;
+
+    setState(() => _isSigningOut = true);
+    await ref.read(authControllerProvider.notifier).signOut();
+    if (!mounted) return;
+
+    final authState = ref.read(authControllerProvider);
+    setState(() => _isSigningOut = false);
+    if (authState.errorMessage != null && authState.errorMessage!.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign out warning: ${authState.errorMessage}')),
+      );
     }
   }
 
@@ -1109,6 +1148,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           icon: const Icon(Icons.edit),
           label: const Text('Edit Profile'),
         ),
+        const SizedBox(height: AppSizes.p12),
+        FilledButton.icon(
+          key: const Key('profile_sign_out_button_overview'),
+          onPressed: _isSigningOut ? null : _handleSignOut,
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.black,
+          ),
+          icon: _isSigningOut
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.black,
+                  ),
+                )
+              : const Icon(Icons.logout),
+          label: Text(_isSigningOut ? 'Signing out...' : 'Sign out'),
+        ),
         ],
           ],
         ),
@@ -1182,9 +1241,18 @@ class _ProfileSectionRowButton extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: 18),
+              Icon(
+                icon, 
+                size: 18,
+                color: selected ? Colors.black : null,
+              ),
               const SizedBox(width: AppSizes.p8),
-              Text(label),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? Colors.black : null,
+                ),
+              ),
             ],
           ),
         ),
@@ -1653,3 +1721,5 @@ class _ContactInviteList extends ConsumerWidget {
     );
   }
 }
+
+

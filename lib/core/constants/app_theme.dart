@@ -5,8 +5,8 @@ class AppTheme {
 
   static ThemeData light() {
     const colorScheme = ColorScheme.light(
-      primary: Color(0xFF5A5A40),
-      onPrimary: Color(0xFFFFFFFF),
+      primary: Color(0xFFE0BD6A),
+      onPrimary: Color(0xFF1A1404),
       secondary: Color(0xFFD1CEBF),
       surface: Color(0xFFFAF9F6),
       onSurface: Color(0xFF2D2D2A),

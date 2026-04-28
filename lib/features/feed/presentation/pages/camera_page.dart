@@ -357,9 +357,9 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                   onTap: () => widget.onSwipeToMemories?.call(),
                   child: Column(
                     children: [
-                      Icon(Icons.calendar_today_outlined, color: colorScheme.primary, size: 20),
+                      Icon(Icons.calendar_today_outlined, color: colorScheme.onSurface, size: 20),
                       const SizedBox(height: 4),
-                      Text('DATE MEMORY', style: TextStyle(color: colorScheme.primary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                      Text('DATE MEMORY', style: TextStyle(color: colorScheme.onSurface, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                     ],
                   ),
                 ),
@@ -374,11 +374,11 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                         children: [
                           Container(
                             width: 50, height: 50,
-                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
-                            child: Icon(Icons.photo_library_outlined, color: colorScheme.primary, size: 20),
+                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: colorScheme.outline)),
+                            child: Icon(Icons.photo_library_outlined, color: colorScheme.onSurface, size: 20),
                           ),
                           const SizedBox(height: 8),
-                          Text('VAULT', style: TextStyle(color: colorScheme.primary, fontSize: 9, letterSpacing: 1.0)),
+                          Text('VAULT', style: TextStyle(color: colorScheme.onSurface, fontSize: 9, letterSpacing: 1.0)),
                         ],
                       )
                     ),
@@ -390,7 +390,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: colorScheme.primary.withOpacity(0.3), width: 2),
+                          border: Border.all(color: colorScheme.outline, width: 2),
                         ),
                         child: Container(
                           decoration: BoxDecoration(
@@ -400,7 +400,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                           child: Center(
                             child: Container(
                               width: 8, height: 8,
-                              decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black45),
+                              decoration: BoxDecoration(shape: BoxShape.circle, color: colorScheme.onPrimary),
                             )
                           ),
                         ),
@@ -413,11 +413,11 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                         children: [
                           Container(
                             width: 50, height: 50,
-                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
-                            child: Icon(Icons.flip_camera_ios_outlined, color: colorScheme.primary, size: 20),
+                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: colorScheme.outline)),
+                            child: Icon(Icons.flip_camera_ios_outlined, color: colorScheme.onSurface, size: 20),
                           ),
                           const SizedBox(height: 8),
-                          Text('FLIP', style: TextStyle(color: colorScheme.primary, fontSize: 9, letterSpacing: 1.0)),
+                          Text('FLIP', style: TextStyle(color: colorScheme.onSurface, fontSize: 9, letterSpacing: 1.0)),
                         ],
                       )
                     ),
