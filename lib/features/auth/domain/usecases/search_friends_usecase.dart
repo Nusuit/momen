@@ -32,8 +32,16 @@ class GetIncomingFriendRequestsUseCase {
 class RespondToFriendRequestUseCase {
   const RespondToFriendRequestUseCase(this._repository);
   final FriendSearchRepository _repository;
-  Future<void> call({required String requesterId, required bool accept}) =>
-      _repository.respondToFriendRequest(requesterId: requesterId, accept: accept);
+  Future<void> call({
+    required String requesterId, 
+    required bool accept,
+    bool shareHistory = false,
+  }) =>
+      _repository.respondToFriendRequest(
+        requesterId: requesterId, 
+        accept: accept,
+        shareHistory: shareHistory,
+      );
 }
 
 class GetPublicProfileByIdUseCase {

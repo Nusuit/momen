@@ -136,12 +136,17 @@ class PublicProfilePage extends ConsumerWidget {
                         onPressed: acceptPending || rejectPending
                             ? null
                             : () async {
+                                final share = await _showShareHistoryDialog(
+                                    context, profile.fullName);
+                                if (share == null) return;
+                                
                                 await ref
                                     .read(
                                         friendRequestPendingIdsProvider.notifier)
                                     .respondToRequest(
                                       requesterId: profile.id,
                                       accept: true,
+                                      shareHistory: share,
                                     );
                                 ref.invalidate(publicProfileByIdProvider(userId));
                               },
@@ -354,6 +359,24 @@ class PublicProfilePage extends ConsumerWidget {
           FilledButton(
               onPressed: () => Navigator.pop(ctx, controller.text.trim()),
               child: const Text('Submit')),
+        ],
+      ),
+    );
+  }
+
+  Future<bool?> _showShareHistoryDialog(BuildContext context, String fullName) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Chia sẻ lịch sử?'),
+        content: Text('Bạn có muốn chia sẻ lịch sử ảnh 30 ngày qua của mình với $fullName không?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Không, chỉ ảnh mới')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Có, chia sẻ')),
         ],
       ),
     );

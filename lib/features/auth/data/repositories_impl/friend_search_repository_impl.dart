@@ -30,9 +30,13 @@ class FriendSearchRepositoryImpl implements FriendSearchRepository {
   Future<void> respondToFriendRequest({
     required String requesterId,
     required bool accept,
+    bool shareHistory = false,
   }) =>
       _remoteDataSource.respondToFriendRequest(
-          requesterId: requesterId, accept: accept);
+        requesterId: requesterId,
+        accept: accept,
+        shareHistory: shareHistory,
+      );
 
   @override
   Future<PublicProfileView?> getPublicProfileById(String userId) =>

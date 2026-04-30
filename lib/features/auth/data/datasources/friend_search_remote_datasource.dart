@@ -3,6 +3,7 @@ import 'package:momen/features/auth/domain/entities/nearby_user_profile.dart';
 import 'package:momen/features/auth/domain/entities/public_profile_post.dart';
 import 'package:momen/features/auth/domain/entities/friend_request.dart';
 import 'package:momen/features/auth/domain/entities/public_profile_view.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FriendSearchRemoteDataSource {
@@ -163,6 +164,7 @@ class FriendSearchRemoteDataSource {
   Future<void> respondToFriendRequest({
     required String requesterId,
     required bool accept,
+    bool shareHistory = false,
   }) async {
     final client = _client;
     if (client == null) throw Exception('Supabase is not configured.');
@@ -179,6 +181,17 @@ class FriendSearchRemoteDataSource {
         .eq('requester_id', normalizedId)
         .eq('addressee_id', user.id)
         .eq('status', 'pending');
+
+    if (accept && shareHistory) {
+      try {
+        await client.from('history_share_grants').upsert({
+          'granter_id': user.id,
+          'grantee_id': normalizedId,
+        });
+      } catch (e) {
+        debugPrint('[FriendSearch] history_share_grants upsert failed: $e');
+      }
+    }
   }
 
   Future<PublicProfileView?> getPublicProfileById(String userId) async {

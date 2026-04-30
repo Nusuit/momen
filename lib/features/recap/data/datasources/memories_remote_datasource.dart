@@ -41,13 +41,73 @@ class MemoriesRemoteDataSource {
       rethrow;
     }
 
+    // ── Apply History Share Grant Filtering ──
+    List filteredRecords = records;
+    try {
+      // 1. Fetch grants where I am the grantee
+      final grantsResponse = await client
+          .from('history_share_grants')
+          .select('granter_id, granted_at')
+          .eq('grantee_id', user.id);
+      
+      final sharedGranters = <String, DateTime>{};
+      for (final row in grantsResponse) {
+        final granterId = (row['granter_id'] as String?)?.trim() ?? '';
+        final grantedAtStr = row['granted_at'] as String?;
+        if (granterId.isNotEmpty && grantedAtStr != null) {
+          sharedGranters[granterId] = DateTime.tryParse(grantedAtStr) ?? DateTime.now();
+        }
+      }
+
+      // 2. Fetch friendship dates
+      final friendshipsResponse = await client
+          .from('friendships')
+          .select('requester_id, addressee_id, created_at')
+          .or('requester_id.eq.${user.id},addressee_id.eq.${user.id}')
+          .eq('status', 'accepted');
+      
+      final friendshipDates = <String, DateTime>{};
+      for (final row in friendshipsResponse) {
+        final rId = (row['requester_id'] as String?)?.trim() ?? '';
+        final aId = (row['addressee_id'] as String?)?.trim() ?? '';
+        final friendId = rId == user.id ? aId : rId;
+        final cStr = row['created_at'] as String?;
+        if (friendId.isNotEmpty && cStr != null) {
+          friendshipDates[friendId] = DateTime.tryParse(cStr) ?? DateTime.now();
+        }
+      }
+
+      // 3. Filter
+      filteredRecords = records.where((record) {
+        final ownerId = (record['user_id'] as String?)?.trim() ?? '';
+        if (ownerId == user.id || ownerId.isEmpty) return true; // Keep my own posts
+
+        final createdAt = DateTime.tryParse((record['created_at'] as String?) ?? '') ?? DateTime.now();
+        
+        final grantedAt = sharedGranters[ownerId];
+        if (grantedAt != null) {
+           // They shared 30 days of history
+           final sharedSince = grantedAt.subtract(const Duration(days: 30));
+           return createdAt.isAfter(sharedSince);
+        } else {
+           // No history shared. Only show posts after we became friends.
+           // Fallback to 1 day ago if created_at is missing from friendships.
+           final friendSince = friendshipDates[ownerId] ?? DateTime.now().subtract(const Duration(days: 1));
+           return createdAt.isAfter(friendSince);
+        }
+      }).toList();
+    } catch (e) {
+      debugPrint('[Memories] filtering ERROR: $e');
+      // If table doesn't exist or column is missing, just fallback to not filtering
+    }
+
     // Batch-fetch owner names for revealed posts
     final postIds = <String>[
-      for (final r in records) ((r['id'] as String?) ?? '').trim(),
+      for (final r in filteredRecords) ((r['id'] as String?) ?? '').trim(),
     ]..removeWhere((id) => id.isEmpty);
 
     final revealedOwnerIds = <String>{
-      for (final r in records)
+      for (final r in filteredRecords)
         if ((r['is_revealed'] as bool? ?? false) == true &&
             (r['user_id'] as String?) != user.id)
           (r['user_id'] as String? ?? ''),
@@ -73,7 +133,7 @@ class MemoriesRemoteDataSource {
       currentUserId: user.id,
     );
 
-    return records
+    return filteredRecords
         .map((record) {
           final imagePath = (record['image_path'] as String?) ?? '';
           final imageUrl = imagePath.startsWith('http')

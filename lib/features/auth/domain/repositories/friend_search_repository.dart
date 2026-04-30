@@ -16,6 +16,7 @@ abstract class FriendSearchRepository {
   Future<void> respondToFriendRequest({
     required String requesterId,
     required bool accept,
+    bool shareHistory = false,
   });
 
   Future<PublicProfileView?> getPublicProfileById(String userId);

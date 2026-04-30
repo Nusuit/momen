@@ -196,6 +196,7 @@ class FriendRequestController extends Notifier<Set<String>> {
   Future<void> respondToRequest({
     required String requesterId,
     required bool accept,
+    bool shareHistory = false,
   }) async {
     final actionKey = '${accept ? 'accept' : 'reject'}:$requesterId';
     if (state.contains(actionKey)) return;
@@ -203,7 +204,11 @@ class FriendRequestController extends Notifier<Set<String>> {
     try {
       await ref
           .read(_respondToFriendRequestUseCaseProvider)
-          .call(requesterId: requesterId, accept: accept);
+          .call(
+            requesterId: requesterId, 
+            accept: accept,
+            shareHistory: shareHistory,
+          );
       ref.invalidate(friendCountProvider);
       ref.invalidate(incomingFriendRequestsProvider);
     } finally {

@@ -774,6 +774,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                     onPressed: accepting || rejecting
                                         ? null
                                         : () async {
+                                            final share = await _showShareHistoryDialog(
+                                                context, request.fullName);
+                                            if (share == null) return;
+                                            
                                             try {
                                               await ref
                                                   .read(
@@ -782,7 +786,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                                   .respondToRequest(
                                                       requesterId: request
                                                           .requesterId,
-                                                      accept: true);
+                                                      accept: true,
+                                                      shareHistory: share,
+                                                  );
                                             } catch (e) {
                                               if (!context.mounted) return;
                                               ScaffoldMessenger.of(context)
@@ -1721,5 +1727,24 @@ class _ContactInviteList extends ConsumerWidget {
     );
   }
 }
+
+Future<bool?> _showShareHistoryDialog(BuildContext context, String fullName) {
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Chia sẻ lịch sử?'),
+      content: Text('Bạn có muốn chia sẻ lịch sử ảnh 30 ngày qua của mình với $fullName không?'),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Không, chỉ ảnh mới')),
+        FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Có, chia sẻ')),
+      ],
+    ),
+  );
+}
+
 
 
