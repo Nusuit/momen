@@ -8,7 +8,7 @@ class SpendingSummaryRemoteDataSource {
 
   final SupabaseClient? _client;
 
-  Future<SpendingSummary> getSummary() async {
+  Future<SpendingSummary> getSummary({DateTime? month}) async {
     final client = _client;
     if (client == null) {
       return const SpendingSummary(
@@ -28,14 +28,17 @@ class SpendingSummaryRemoteDataSource {
     }
 
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
+    final effectiveMonth = month ?? now;
+    final monthStart = DateTime(effectiveMonth.year, effectiveMonth.month, 1);
+    final monthEnd = DateTime(effectiveMonth.year, effectiveMonth.month + 1, 1);
     final dayStart = DateTime(now.year, now.month, now.day);
 
     final monthRows = await client
         .from('posts')
         .select('amount_vnd,created_at')
         .eq('user_id', user.id)
-        .gte('created_at', monthStart.toIso8601String());
+        .gte('created_at', monthStart.toIso8601String())
+        .lt('created_at', monthEnd.toIso8601String());
 
     var monthlyTotal = 0;
     var todayTotal = 0;

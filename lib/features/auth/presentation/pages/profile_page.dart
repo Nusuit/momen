@@ -611,7 +611,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final memoriesCountAsync = ref.watch(memoryCountProvider);
     final friendsCountAsync = ref.watch(friendCountProvider);
-    final spendingSummaryAsync = ref.watch(spendingSummaryProvider);
+    final spendingSummaryAsync = ref.watch(spendingSummaryProvider(null));
     final searchQuery = ref.watch(friendSearchQueryProvider).trim();
     final searchResultsAsync = ref.watch(friendSearchResultsProvider);
     final incomingRequestsAsync = ref.watch(incomingFriendRequestsProvider);

@@ -3,7 +3,7 @@ import 'package:momen/features/spending/domain/entities/spending_day_post.dart';
 import 'package:momen/features/spending/domain/entities/spending_summary.dart';
 
 abstract class SpendingSummaryRepository {
-  Future<SpendingSummary> getSummary();
+  Future<SpendingSummary> getSummary({DateTime? month});
 
   Future<List<SpendingCalendarMonth>> getCalendarMonths();
 

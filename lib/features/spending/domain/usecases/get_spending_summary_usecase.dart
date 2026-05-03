@@ -6,7 +6,7 @@ class GetSpendingSummaryUseCase {
 
   final SpendingSummaryRepository _repository;
 
-  Future<SpendingSummary> call() {
-    return _repository.getSummary();
+  Future<SpendingSummary> call({DateTime? month}) {
+    return _repository.getSummary(month: month);
   }
 }

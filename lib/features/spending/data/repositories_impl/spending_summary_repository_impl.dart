@@ -10,8 +10,8 @@ class SpendingSummaryRepositoryImpl implements SpendingSummaryRepository {
   final SpendingSummaryRemoteDataSource _remoteDataSource;
 
   @override
-  Future<SpendingSummary> getSummary() {
-    return _remoteDataSource.getSummary();
+  Future<SpendingSummary> getSummary({DateTime? month}) {
+    return _remoteDataSource.getSummary(month: month);
   }
 
   @override

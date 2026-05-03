@@ -14,6 +14,7 @@ class FeedMoneyPage extends StatefulWidget {
 
 class _FeedMoneyPageState extends State<FeedMoneyPage> {
   _FeedMoneyTab _activeTab = _FeedMoneyTab.calendar;
+  DateTime? _selectedMonth;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +47,9 @@ class _FeedMoneyPageState extends State<FeedMoneyPage> {
                   onSelectionChanged: (selection) {
                     setState(() {
                       _activeTab = selection.first;
+                      if (_activeTab == _FeedMoneyTab.money) {
+                        _selectedMonth = null;
+                      }
                     });
                   },
                 ),
@@ -59,11 +63,17 @@ class _FeedMoneyPageState extends State<FeedMoneyPage> {
             child: _activeTab == _FeedMoneyTab.calendar
                 ? SpendingCalendarPage(
                     key: const ValueKey('calendar_panel'),
-                    onOpenMoney: () {
-                      setState(() => _activeTab = _FeedMoneyTab.money);
+                    onOpenMoney: (month) {
+                      setState(() {
+                        _selectedMonth = month;
+                        _activeTab = _FeedMoneyTab.money;
+                      });
                     },
                   )
-                : const DashboardPage(key: ValueKey('money_panel')),
+                : DashboardPage(
+                    key: const ValueKey('money_panel'),
+                    month: _selectedMonth,
+                  ),
           ),
         ),
       ],

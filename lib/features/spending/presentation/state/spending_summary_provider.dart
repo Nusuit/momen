@@ -23,6 +23,6 @@ final _getSpendingSummaryUseCaseProvider =
 });
 
 final spendingSummaryProvider =
-    FutureProvider.autoDispose<SpendingSummary>((ref) {
-  return ref.watch(_getSpendingSummaryUseCaseProvider).call();
+    FutureProvider.autoDispose.family<SpendingSummary, DateTime?>((ref, month) {
+  return ref.watch(_getSpendingSummaryUseCaseProvider).call(month: month);
 });

@@ -5,7 +5,9 @@ import 'package:momen/core/constants/app_sizes.dart';
 import 'package:momen/features/spending/presentation/state/spending_summary_provider.dart';
 
 class DashboardPage extends ConsumerWidget {
-  const DashboardPage({super.key});
+  const DashboardPage({this.month, super.key});
+
+  final DateTime? month;
 
   String _formatAmount(int amount) {
     final value = amount.toString();
@@ -22,7 +24,7 @@ class DashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final summaryAsync = ref.watch(spendingSummaryProvider);
+    final summaryAsync = ref.watch(spendingSummaryProvider(month));
 
     return summaryAsync.when(
       data: (summary) {
@@ -46,7 +48,9 @@ class DashboardPage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'This month',
+                      month == null
+                          ? 'This month'
+                          : 'Month ${month!.month}/${month!.year}',
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
                     const SizedBox(height: AppSizes.p8),

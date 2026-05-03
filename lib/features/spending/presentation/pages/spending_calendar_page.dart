@@ -9,7 +9,7 @@ import 'package:momen/features/spending/presentation/state/spending_calendar_pro
 class SpendingCalendarPage extends ConsumerWidget {
   const SpendingCalendarPage({required this.onOpenMoney, super.key});
 
-  final VoidCallback onOpenMoney;
+  final Function(DateTime) onOpenMoney;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,7 +62,7 @@ class _MonthSection extends StatelessWidget {
   const _MonthSection({required this.month, required this.onOpenMoney});
 
   final SpendingCalendarMonth month;
-  final VoidCallback onOpenMoney;
+  final Function(DateTime) onOpenMoney;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +73,7 @@ class _MonthSection extends StatelessWidget {
       children: [
         InkWell(
           borderRadius: BorderRadius.circular(AppSizes.r16),
-          onTap: onOpenMoney,
+          onTap: () => onOpenMoney(month.monthStart),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.p8,
@@ -94,7 +94,7 @@ class _MonthSection extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSizes.p4),
                       Text(
-                        'Tong chi ${_formatCompactAmount(month.totalVnd)}',
+                        'Total spent: ${_formatCompactAmount(month.totalVnd)}',
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(
                               color: colorScheme.primary,
                               fontWeight: FontWeight.w700,
@@ -128,7 +128,11 @@ class _MonthSection extends StatelessWidget {
   }
 
   String _formatMonthYear(DateTime date) {
-    return 'Thang ${date.month} ${date.year}';
+    final names = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return '${names[date.month - 1]} ${date.year}';
   }
 
   String _formatCompactAmount(int amount) {
@@ -163,7 +167,7 @@ class _WeekdayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    const labels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
     return Row(
       children: [
