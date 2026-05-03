@@ -32,13 +32,17 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _handledAuthenticatedEntry = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
+      if (!mounted) return;
+      // Reset stuck loading state from a previous incomplete auth flow
+      final authState = ref.read(authControllerProvider);
+      if (authState.status == AuthStatus.loading) {
+        ref.read(authControllerProvider.notifier).resetToUnauthenticated();
       }
       _maybeHandleAuthenticatedEntry();
     });
@@ -53,55 +57,48 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   Future<void> _signInWithEmail() async {
-    final success = await ref.read(authControllerProvider.notifier).signInWithEmail(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-
-    if (!mounted) {
-      return;
-    }
-    if (success) {
-      final completed = await _ensureProfileCompleted();
-      if (!mounted) {
+    setState(() => _isLoading = true);
+    try {
+      final success = await ref.read(authControllerProvider.notifier).signInWithEmail(
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
+      if (!mounted) return;
+      if (success) {
+        final completed = await _ensureProfileCompleted();
+        if (!mounted) return;
+        if (completed) widget.onSignedIn();
         return;
       }
-      if (completed) {
-        widget.onSignedIn();
-      }
-      return;
+      final message = ref.read(authControllerProvider).errorMessage;
+      _showMessage(message ?? 'Sign in failed.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    final message = ref.read(authControllerProvider).errorMessage;
-    _showMessage(message ?? 'Sign in failed.');
   }
 
   Future<void> _signInWithGoogle() async {
-    final success = await ref.read(authControllerProvider.notifier).signInWithGoogle(
-          redirectTo: AppEnvironment.googleOAuthRedirectUri,
-        );
-
-    if (!mounted) {
-      return;
-    }
-    if (success && ref.read(authControllerProvider).status == AuthStatus.authenticated) {
-      final completed = await _ensureProfileCompleted();
-      if (!mounted) {
+    setState(() => _isLoading = true);
+    try {
+      final success = await ref.read(authControllerProvider.notifier).signInWithGoogle(
+            redirectTo: AppEnvironment.googleOAuthRedirectUri,
+          );
+      if (!mounted) return;
+      if (success && ref.read(authControllerProvider).status == AuthStatus.authenticated) {
+        final completed = await _ensureProfileCompleted();
+        if (!mounted) return;
+        if (completed) widget.onSignedIn();
         return;
       }
-      if (completed) {
-        widget.onSignedIn();
+      final message = ref.read(authControllerProvider).errorMessage;
+      if (message != null && message.isNotEmpty) {
+        _showMessage(message);
+        return;
       }
-      return;
+      _showMessage('Google sign-in started. Complete the flow in browser.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    final message = ref.read(authControllerProvider).errorMessage;
-    if (message != null && message.isNotEmpty) {
-      _showMessage(message);
-      return;
-    }
-
-    _showMessage('Google sign-in started. Complete the flow in browser.');
   }
 
   Future<void> _requestPhoneOtp() async {
@@ -205,8 +202,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.status == AuthStatus.loading;
+    final isLoading = _isLoading;
 
     return Scaffold(
       body: SafeArea(

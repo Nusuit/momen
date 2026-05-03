@@ -7,6 +7,11 @@ void main() {
       'Onboarding advances slides and triggers onComplete at final step', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(1080, 2400));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
     var completeCalls = 0;
 
     await tester.pumpWidget(
@@ -21,11 +26,15 @@ void main() {
     expect(find.text('Continue'), findsOneWidget);
 
     await tester.tap(find.text('Continue'));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.tap(find.text('Continue'));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.tap(find.text('Continue'));
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
 
     expect(find.text('Get Started'), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
 
     await tester.tap(find.text('Get Started'));
     await tester.pump();
@@ -34,6 +43,11 @@ void main() {
   });
 
   testWidgets('Onboarding sign up button triggers callback', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1080, 2400));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
     var signUpCalls = 0;
 
     await tester.pumpWidget(
@@ -45,7 +59,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Create Account'));
+    await tester.tap(find.text('Get Started'));
     await tester.pump();
 
     expect(signUpCalls, 1);

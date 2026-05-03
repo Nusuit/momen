@@ -36,3 +36,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/onboarding/ob1_finance.png
+    - assets/onboarding/ob2_friends.png
+    - assets/onboarding/ob3_dashboard.png
+    - assets/onboarding/ob4_luxury.png
+    - assets/onboarding/ob5_coffee.png
+    - assets/onboarding/ob6_city.png
+    - assets/onboarding/ob7_nature.png
+    - assets/onboarding/ob8_watch.png

@@ -421,7 +421,7 @@ class _MemoryStoryViewState extends ConsumerState<_MemoryStoryView> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppSizes.r24),
             child: Container(
-              color: const Color(0xFF111111),
+              color: Theme.of(context).colorScheme.surface,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -511,7 +511,7 @@ class _MemoryStoryViewState extends ConsumerState<_MemoryStoryView> {
                   Container(
                     padding: const EdgeInsets.fromLTRB(
                         AppSizes.p16, AppSizes.p12, AppSizes.p16, AppSizes.p16),
-                    color: const Color(0xFF111111),
+                    color: Theme.of(context).colorScheme.surface,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -519,8 +519,8 @@ class _MemoryStoryViewState extends ConsumerState<_MemoryStoryView> {
                         // Time
                         Text(
                           _timeAgo(memory.createdAt),
-                          style: const TextStyle(
-                            color: Colors.white38,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
                             fontSize: 11,
                             letterSpacing: 1.4,
                             fontWeight: FontWeight.w600,
@@ -547,8 +547,8 @@ class _MemoryStoryViewState extends ConsumerState<_MemoryStoryView> {
                             key: const Key('memories_story_caption_center'),
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 16,
                               height: 1.4,
                             ),
@@ -587,17 +587,17 @@ class _MemoryStoryViewState extends ConsumerState<_MemoryStoryView> {
                                         .read(revealPostControllerProvider.notifier)
                                         .reveal(memory.id),
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: Colors.white12,
-                                  foregroundColor: Colors.white,
+                                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                                  foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
                                   visualDensity: VisualDensity.compact,
                                 ),
                                 icon: isRevealing
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         width: 14,
                                         height: 14,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color: Colors.white,
+                                          color: Theme.of(context).colorScheme.onSecondaryContainer,
                                         ),
                                       )
                                     : const Icon(Icons.visibility, size: 14),
@@ -888,8 +888,9 @@ class _ReactionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSelected = selectedReaction == reactionType;
-    final bgColor = isSelected ? selectedColor : Colors.white24;
-    final fgColor = isSelected ? Colors.black : Colors.white;
+    final cs = Theme.of(context).colorScheme;
+    final bgColor = isSelected ? selectedColor : cs.onSurface.withOpacity(0.1);
+    final fgColor = isSelected ? Colors.white : cs.onSurface;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -905,13 +906,13 @@ class _ReactionButton extends StatelessWidget {
               color: bgColor,
               borderRadius: BorderRadius.circular(AppSizes.r20),
               border: Border.all(
-                color: isSelected ? Colors.white : Colors.white38,
+                color: isSelected ? selectedColor : cs.onSurface.withOpacity(0.2),
                 width: isSelected ? 1.4 : 1,
               ),
               boxShadow: isSelected
-                  ? const [
+                  ? [
                       BoxShadow(
-                        color: Colors.black38,
+                        color: cs.shadow.withOpacity(0.2),
                         blurRadius: 10,
                         offset: Offset(0, 4),
                       ),
@@ -924,8 +925,8 @@ class _ReactionButton extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           '$count',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.w700,
           ),
         ),

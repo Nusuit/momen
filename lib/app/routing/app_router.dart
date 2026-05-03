@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:momen/app/routing/app_route.dart';
@@ -15,6 +15,14 @@ import 'package:momen/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:momen/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:momen/features/auth/presentation/state/auth_controller.dart';
 import 'package:momen/features/feed/presentation/pages/detail_page.dart';
+
+void _popOrGoNamed(BuildContext context, String routeName) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.goNamed(routeName);
+  }
+}
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authStateNotifier = ValueNotifier<AuthStatus>(AuthStatus.unknown);
@@ -65,16 +73,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoute.onboarding.name,
         path: '/',
         builder: (context, state) => OnboardingPage(
-          onComplete: () => context.goNamed(AppRoute.signIn.name),
-          onSignUp: () => context.goNamed(AppRoute.signUp.name),
+          onComplete: () => context.pushNamed(AppRoute.signIn.name),
+          onSignUp: () => context.pushNamed(AppRoute.signUp.name),
         ),
       ),
       GoRoute(
         name: AppRoute.signIn.name,
         path: '/sign-in',
         builder: (context, state) => SignInPage(
-          onBack: () => context.goNamed(AppRoute.onboarding.name),
-          onSignUp: () => context.goNamed(AppRoute.signUp.name),
+          onBack: () => _popOrGoNamed(context, AppRoute.onboarding.name),
+          onSignUp: () => context.pushNamed(AppRoute.signUp.name),
           onForgotPassword: () => context.goNamed(AppRoute.forgotPassword.name),
           onOpenOtpVerification: (phone) => context.goNamed(
             AppRoute.otpVerification.name,
@@ -93,7 +101,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoute.signUp.name,
         path: '/sign-up',
         builder: (context, state) => SignUpPage(
-          onBack: () => context.goNamed(AppRoute.onboarding.name),
+          onBack: () => _popOrGoNamed(context, AppRoute.onboarding.name),
           onRequireOtpVerification: (channel, value) => context.goNamed(
             AppRoute.otpVerification.name,
             queryParameters: {
@@ -102,7 +110,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               if (channel == OtpChannel.email) 'email': value,
             },
           ),
-          onSignIn: () => context.goNamed(AppRoute.signIn.name),
+          onSignIn: () => context.pushNamed(AppRoute.signIn.name),
         ),
       ),
       GoRoute(
@@ -150,8 +158,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoute.authCallback.name,
         path: '/auth-callback',
         builder: (context, state) => SignInPage(
-          onBack: () => context.goNamed(AppRoute.onboarding.name),
-          onSignUp: () => context.goNamed(AppRoute.signUp.name),
+          onBack: () => _popOrGoNamed(context, AppRoute.onboarding.name),
+          onSignUp: () => context.pushNamed(AppRoute.signUp.name),
           onForgotPassword: () => context.goNamed(AppRoute.forgotPassword.name),
           onOpenOtpVerification: (phone) => context.goNamed(
             AppRoute.otpVerification.name,

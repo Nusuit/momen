@@ -164,6 +164,9 @@ class AuthController extends Notifier<AuthControllerState> {
       final user = await ref.read(_signInWithEmailUseCaseProvider).call(
             email: email.trim(),
             password: password,
+          ).timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw Exception('Request timed out. Check your connection.'),
           );
       await _applyAuthenticatedState(user);
       return true;
@@ -384,6 +387,12 @@ class AuthController extends Notifier<AuthControllerState> {
       return true;
     } catch (_) {
       return false;
+    }
+  }
+
+  void resetToUnauthenticated() {
+    if (state.status == AuthStatus.loading) {
+      state = const AuthControllerState.unauthenticated();
     }
   }
 

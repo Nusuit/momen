@@ -494,10 +494,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
+              style: TextButton.styleFrom(foregroundColor: Colors.black),
               child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('Sign out'),
             ),
           ],
