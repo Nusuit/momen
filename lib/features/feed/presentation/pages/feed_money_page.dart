@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:momen/core/constants/app_sizes.dart';
-import 'package:momen/features/feed/presentation/pages/feed_page.dart';
 import 'package:momen/features/spending/presentation/pages/dashboard_page.dart';
+import 'package:momen/features/spending/presentation/pages/spending_calendar_page.dart';
 
-enum _FeedMoneyTab { feed, money }
+enum _FeedMoneyTab { calendar, money }
 
 class FeedMoneyPage extends StatefulWidget {
   const FeedMoneyPage({super.key});
@@ -13,7 +13,7 @@ class FeedMoneyPage extends StatefulWidget {
 }
 
 class _FeedMoneyPageState extends State<FeedMoneyPage> {
-  _FeedMoneyTab _activeTab = _FeedMoneyTab.feed;
+  _FeedMoneyTab _activeTab = _FeedMoneyTab.calendar;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class _FeedMoneyPageState extends State<FeedMoneyPage> {
                 child: SegmentedButton<_FeedMoneyTab>(
                   segments: const [
                     ButtonSegment<_FeedMoneyTab>(
-                      value: _FeedMoneyTab.feed,
+                      value: _FeedMoneyTab.calendar,
                       icon: Icon(Icons.calendar_month),
                       label: Text('Calendar'),
                     ),
@@ -56,8 +56,13 @@ class _FeedMoneyPageState extends State<FeedMoneyPage> {
         Expanded(
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 180),
-            child: _activeTab == _FeedMoneyTab.feed
-                ? const FeedPage(key: ValueKey('feed_panel'))
+            child: _activeTab == _FeedMoneyTab.calendar
+                ? SpendingCalendarPage(
+                    key: const ValueKey('calendar_panel'),
+                    onOpenMoney: () {
+                      setState(() => _activeTab = _FeedMoneyTab.money);
+                    },
+                  )
                 : const DashboardPage(key: ValueKey('money_panel')),
           ),
         ),
